@@ -317,9 +317,10 @@ static int tw28xx_clkp_delay(struct tw5864_dev *dev, u8 devid, u32 base_ch,
 			i2c_write(dev, devid, 0x9f, delay);
 			/* only bus0 can detect colume and line */
 			tw_writel(TW5864_H264EN_BUS0_MAP, base_ch);
-			tw_writel(0x9218, 0x1); /* clear error flags */
+			/* clear error flags */
+			tw_writel(TW5864_UNDEFINED_ERROR_FLAGS_0x9218, 0x1);
 			mdelay(100);
-			if (tw_readl(0x9218))
+			if (tw_readl(TW5864_UNDEFINED_ERROR_FLAGS_0x9218))
 				continue;
 			dev_dbg(&dev->pci->dev, "auto detect CLKP_DEL = %02x\n",
 				delay);

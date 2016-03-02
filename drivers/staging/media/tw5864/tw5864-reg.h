@@ -348,9 +348,11 @@
  * 0x7 16x16 & 4x4
  */
 #define TW5864_DSP_INTRA_MODE      0x0410
-#define TW5864_DSP_INTRA_MODE_MASK 0x0070
 #define TW5864_DSP_INTRA_MODE_SHIFT     4
-
+#define TW5864_DSP_INTRA_MODE_MASK (7 << TW5864_DSP_INTRA_MODE_SHIFT)
+#define TW5864_DSP_INTRA_MODE_4x4 0x5
+#define TW5864_DSP_INTRA_MODE_16x16 0x6
+#define TW5864_DSP_INTRA_MODE_4x4_AND_16x16 0x7
 /*
  * [5:0]
  * WEIGHT Factor for I4x4 cost
@@ -1054,6 +1056,9 @@
 #define TW5864_H264EN_BUS1_MAP     0x9204
 #define TW5864_H264EN_BUS2_MAP     0x9208
 #define TW5864_H264EN_BUS3_MAP     0x920C
+
+/* This register is not defined in datasheet, but used in reference driver */
+#define TW5864_UNDEFINED_ERROR_FLAGS_0x9218 0x9218
 
 #define TW5864_GPIO1               0x9800
 #define TW5864_GPIO2               0x9804
@@ -1765,6 +1770,15 @@
 
 /* Some registers skipped. */
 
+/* Use falling edge to sample VD1-VD4 from 54 MHz to 108 MHz */
+#define TW5864_INDIR_VD_108_POL 0x041
+#define TW5864_INDIR_VD_108_POL_VD12 BIT(0)
+#define TW5864_INDIR_VD_108_POL_VD34 BIT(1)
+#define TW5864_INDIR_VD_108_POL_BOTH \
+	(TW5864_INDIR_VD_108_POL_VD12 | TW5864_INDIR_VD_108_POL_VD34)
+
+/* Some registers skipped. */
+
 /*
  * Audio Input ADC gain control
  * 0 0.25
@@ -1920,6 +1934,10 @@
  */
 #define TW5864_INDIR_ID 0x0FE
 
+#define TW5864_INDIR_IN_PIC_WIDTH(channel) (0x200 + 4 * channel)
+#define TW5864_INDIR_IN_PIC_HEIGHT(channel) (0x201 + 4 * channel)
+#define TW5864_INDIR_OUT_PIC_WIDTH(channel) (0x202 + 4 * channel)
+#define TW5864_INDIR_OUT_PIC_HEIGHT(channel) (0x203 + 4 * channel)
 /*
  * Interrupt status register from the front-end. Write "1" to each bit to clear
  * the interrupt
@@ -2153,3 +2171,30 @@
 
 /* Clock PLL / Analog IP Control */
 /* Some registers skipped */
+
+#define TW5864_INDIR_DDRA_DLL_DQS_SEL0 0xEE6
+#define TW5864_INDIR_DDRA_DLL_DQS_SEL1 0xEE7
+#define TW5864_INDIR_DDRA_DLL_CLK90_SEL 0xEE8
+#define TW5864_INDIR_DDRA_DLL_TEST_SEL_AND_TAP_S 0xEE9
+
+#define TW5864_INDIR_DDRB_DLL_DQS_SEL0 0xEEB
+#define TW5864_INDIR_DDRB_DLL_DQS_SEL1 0xEEC
+#define TW5864_INDIR_DDRB_DLL_CLK90_SEL 0xEED
+#define TW5864_INDIR_DDRB_DLL_TEST_SEL_AND_TAP_S 0xEEE
+
+#define TW5864_INDIR_RESET 0xEF0
+#define TW5864_INDIR_RESET_VD BIT(7)
+#define TW5864_INDIR_RESET_DLL BIT(6)
+#define TW5864_INDIR_RESET_MUX_CORE BIT(5)
+
+#define TW5864_INDIR_PV_VD_CK_POL 0xEFD
+#define TW5864_INDIR_PV_VD_CK_POL_PV(channel) BIT(channel)
+#define TW5864_INDIR_PV_VD_CK_POL_VD(channel) BIT(channel + 4)
+
+#define TW5864_INDIR_CLK0_SEL 0xEFE
+#define TW5864_INDIR_CLK0_SEL_VD_SHIFT 0
+#define TW5864_INDIR_CLK0_SEL_VD_MASK (0x3 << TW5864_INDIR_CLK0_SEL_VD_SHIFT)
+#define TW5864_INDIR_CLK0_SEL_PV_SHIFT 2
+#define TW5864_INDIR_CLK0_SEL_PV_MASK (0x3 << TW5864_INDIR_CLK0_SEL_PV_SHIFT)
+#define TW5864_INDIR_CLK0_SEL_PV2_SHIFT 4
+#define TW5864_INDIR_CLK0_SEL_PV2_MASK (0x3 << TW5864_INDIR_CLK0_SEL_PV2_SHIFT)

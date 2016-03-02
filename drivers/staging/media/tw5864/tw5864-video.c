@@ -180,12 +180,16 @@ static int tw5864_enable_input(struct tw5864_input *input)
 	}
 
 	/* analog input width / 4 */
-	tw_indir_writeb(dev, 0x200 + 4 * input_number, d1_width / 4);
-	tw_indir_writeb(dev, 0x201 + 4 * input_number, d1_height / 4);
+	tw_indir_writeb(dev, TW5864_INDIR_IN_PIC_WIDTH(input_number),
+			d1_width / 4);
+	tw_indir_writeb(dev, TW5864_INDIR_IN_PIC_HEIGHT(input_number),
+			d1_height / 4);
 
 	/* output width / 4 */
-	tw_indir_writeb(dev, 0x202 + 4 * input_number, input->width / 4);
-	tw_indir_writeb(dev, 0x203 + 4 * input_number, input->height / 4);
+	tw_indir_writeb(dev, TW5864_INDIR_OUT_PIC_WIDTH(input_number),
+			input->width / 4);
+	tw_indir_writeb(dev, TW5864_INDIR_OUT_PIC_HEIGHT(input_number),
+			input->height / 4);
 
 	tw_writel(TW5864_DSP_PIC_MAX_MB,
 		  ((input->width / 16) << 8) | (input->height / 16));
@@ -239,7 +243,9 @@ void tw5864_request_encoded_frame(struct tw5864_input *input)
 	tw_writel(TW5864_DSP_REF_MVP_LAMBDA, input->reg_dsp_ref_mvp_lambda);
 	tw_writel(TW5864_DSP_I4x4_WEIGHT, input->reg_dsp_i4x4_weight);
 	/* 16x16 */
-	tw_writel(TW5864_DSP_INTRA_MODE, 0x00000060);
+	tw_mask_shift_writel(TW5864_DSP_INTRA_MODE, TW5864_DSP_INTRA_MODE_MASK,
+			TW5864_DSP_INTRA_MODE_SHIFT,
+			TW5864_DSP_INTRA_MODE_16x16);
 
 	if (input->frame_seqno % input->gop == 0) {
 		/* Produce I-frame */
@@ -269,8 +275,8 @@ void tw5864_request_encoded_frame(struct tw5864_input *input)
 	tw_writel(TW5864_DSP_ENC_REC,
 		  (((enc_buf_id_new + 1) % 4) << 12) | (enc_buf_id_new & 0x3));
 
-	tw_writel(TW5864_SLICE, 0x00008000);
-	tw_writel(TW5864_SLICE, 0x00000000);
+	tw_writel(TW5864_SLICE, TW5864_START_NSLICE);
+	tw_writel(TW5864_SLICE, 0);
 }
 
 static int tw5864_disable_input(struct tw5864_input *input)
@@ -419,10 +425,10 @@ static int tw5864_enum_input(struct file *file, void *priv,
 {
 	struct tw5864_input *dev = video_drvdata(file);
 
-	u8 indir_0x000 =
-		tw_indir_readb(dev->root, 0x000 + dev->input_number * 0x010);
-	u8 indir_0x00d =
-		tw_indir_readb(dev->root, 0x00d + dev->input_number * 0x010);
+	u8 indir_0x000 = tw_indir_readb(dev->root,
+			TW5864_INDIR_VIN_0(dev->input_number));
+	u8 indir_0x00d = tw_indir_readb(dev->root,
+			TW5864_INDIR_VIN_D(dev->input_number));
 	u8 v1 = indir_0x000;
 	u8 v2 = indir_0x00d;
 
@@ -735,20 +741,22 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 	tw5864_init_ad(dev);
 
 	/* Picture is distorted without this block */
-	/*use falling edge to sample ,54M to 108M */
-	tw_indir_writeb(dev, 0x041, 0x03);
-	tw_indir_writeb(dev, 0xefe, 0x00);
+	/* use falling edge to sample 54M to 108M */
+	tw_indir_writeb(dev, TW5864_INDIR_VD_108_POL,
+			TW5864_INDIR_VD_108_POL_BOTH);
+	tw_indir_writeb(dev, TW5864_INDIR_CLK0_SEL, 0x00);
 
-	tw_indir_writeb(dev, 0xee6, 0x02);
-	tw_indir_writeb(dev, 0xee7, 0x02);
-	tw_indir_writeb(dev, 0xee8, 0x02);
-	tw_indir_writeb(dev, 0xeeb, 0x02);
-	tw_indir_writeb(dev, 0xeec, 0x02);
-	tw_indir_writeb(dev, 0xeed, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRA_DLL_DQS_SEL0, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRA_DLL_DQS_SEL1, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRA_DLL_CLK90_SEL, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRB_DLL_DQS_SEL0, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRB_DLL_DQS_SEL1, 0x02);
+	tw_indir_writeb(dev, TW5864_INDIR_DDRB_DLL_CLK90_SEL, 0x02);
 
-	/* vi reset */
-	tw_indir_writeb(dev, 0xef0, 0x00);
-	tw_indir_writeb(dev, 0xef0, 0xe0);
+	/* video input reset */
+	tw_indir_writeb(dev, TW5864_INDIR_RESET, 0);
+	tw_indir_writeb(dev, TW5864_INDIR_RESET, TW5864_INDIR_RESET_VD |
+			TW5864_INDIR_RESET_DLL | TW5864_INDIR_RESET_MUX_CORE);
 	mdelay(10);
 
 	/*
@@ -760,7 +768,11 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 	 */
 	tw_writel(TW5864_FULL_HALF_MODE_SEL, 0);
 
-	tw_indir_writeb(dev, 0xefd, 0xf0);
+	tw_indir_writeb(dev, TW5864_INDIR_PV_VD_CK_POL,
+			TW5864_INDIR_PV_VD_CK_POL_VD(0) |
+			TW5864_INDIR_PV_VD_CK_POL_VD(1) |
+			TW5864_INDIR_PV_VD_CK_POL_VD(2) |
+			TW5864_INDIR_PV_VD_CK_POL_VD(3));
 
 	dev->h264_buf_r_index = 0;
 	dev->h264_buf_w_index = 0;
@@ -770,18 +782,18 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 		  dev->h264_buf[dev->h264_buf_w_index].mv.dma_addr);
 
 	for (i = 0; i < TW5864_INPUTS; i++) {
-		tw_indir_writeb(dev, 0x00e + i * 0x010, 0x07);
+		tw_indir_writeb(dev, TW5864_INDIR_VIN_E(i), 0x07);
 		/* to initiate auto format recognition */
-		tw_indir_writeb(dev, 0x00f + i * 0x010, 0xff);
+		tw_indir_writeb(dev, TW5864_INDIR_VIN_F(i), 0xff);
 	}
 
 	tw_writel(TW5864_SEN_EN_CH, 0x000f);
 	tw_writel(TW5864_H264EN_CH_EN, 0x000f);
 
-	tw_writel(0x09200, 0x00000000);
-	tw_writel(0x09204, 0x00001111);
-	tw_writel(0x09208, 0x00002222);
-	tw_writel(0x0920c, 0x00003333);
+	tw_writel(TW5864_H264EN_BUS0_MAP, 0x00000000);
+	tw_writel(TW5864_H264EN_BUS1_MAP, 0x00001111);
+	tw_writel(TW5864_H264EN_BUS2_MAP, 0x00002222);
+	tw_writel(TW5864_H264EN_BUS3_MAP, 0x00003333);
 
 	/*
 	 * Quote from Intersil (manufacturer):
