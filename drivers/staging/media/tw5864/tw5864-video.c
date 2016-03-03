@@ -760,10 +760,6 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 	 */
 	tw_writel(TW5864_FULL_HALF_MODE_SEL, 0);
 
-	tw_indir_writeb(dev, 0xefa, 0x44);
-	tw_indir_writeb(dev, 0xefb, 0x44);
-
-	tw_indir_writeb(dev, 0xefc, 0x00);
 	tw_indir_writeb(dev, 0xefd, 0xf0);
 
 	dev->h264_buf_r_index = 0;
