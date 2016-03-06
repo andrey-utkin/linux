@@ -596,9 +596,39 @@ static void tw5864_frame_interval_set(struct tw5864_input *input)
 		  unary_framerate & 0xffff);
 }
 
+static int tw5864_frameinterval_get(struct tw5864_input *input,
+		struct v4l2_fract *frameinterval)
+{
+	int ret;
+	enum tw5864_vid_std std;
+
+	ret = tw5864_input_std_get(input, &std);
+	if (ret)
+		return ret;
+
+	frameinterval->numerator = 1;
+
+	switch (std) {
+	case STD_NTSC:
+	case STD_SECAM:
+		frameinterval->denominator = 25;
+		break;
+	case STD_PAL:
+		frameinterval->denominator = 30;
+		break;
+	default:
+		WARN(1, "tw5864_frameinterval_get requested for unknown std %d\n", std);
+		return 1;
+	}
+
+	return 0;
+}
+
 static int tw5864_enum_frameintervals(struct file *file, void *priv,
 				      struct v4l2_frmivalenum *fintv)
 {
+	struct tw5864_input *input = video_drvdata(file);
+
 	if (fintv->pixel_format != V4L2_PIX_FMT_H264)
 		return -EINVAL;
 	if (fintv->index)
@@ -606,11 +636,7 @@ static int tw5864_enum_frameintervals(struct file *file, void *priv,
 
 	fintv->type = V4L2_FRMIVAL_TYPE_DISCRETE;
 
-	fintv->discrete.numerator = 1;
-	/* TODO Base on current std */
-	fintv->discrete.denominator = 32;
-
-	return 0;
+	return tw5864_frameinterval_get(input, &fintv->discrete);
 }
 
 static int tw5864_g_parm(struct file *file, void *priv,
@@ -618,18 +644,14 @@ static int tw5864_g_parm(struct file *file, void *priv,
 {
 	struct tw5864_input *input = video_drvdata(file);
 	struct v4l2_captureparm *cp = &sp->parm.capture;
+	int ret;
 
 	cp->capability = V4L2_CAP_TIMEPERFRAME;
-	cp->timeperframe.numerator = input->frame_interval;
-	/* TODO Base on current std */
-	cp->timeperframe.denominator = 32;
-#if 0
-	cp->capturemode = 0;
-	/* XXX: Shouldn't we be able to get/set this from videobuf? */
-	cp->readbuffers = 2;
-#endif
 
-	return 0;
+	ret = tw5864_frameinterval_get(input, &cp->timeperframe);
+	cp->timeperframe.numerator *= input->frame_interval;
+
+	return ret;
 }
 
 static int tw5864_s_parm(struct file *file, void *priv,
