@@ -1232,6 +1232,7 @@ static void tw5864_handle_frame(struct tw5864_h264_frame *frame)
 	struct tw5864_input *input = frame->input;
 	struct tw5864_dev *dev = input->root;
 	struct tw5864_buf *vb;
+	struct vb2_v4l2_buffer *v4l2_buf;
 	int frame_len = frame->vlc_len;
 	unsigned long dst_size;
 	unsigned long dst_space;
@@ -1252,6 +1253,8 @@ static void tw5864_handle_frame(struct tw5864_h264_frame *frame)
 	vb = input->vb;
 	input->vb = NULL;
 	spin_unlock_irqrestore(&input->slock, flags);
+
+	v4l2_buf = to_vb2_v4l2_buffer(&vb->vb.vb2_buf);
 
 	if (!vb) { /* Gone because of disabling */
 		dev_dbg(&dev->pci->dev, "vb is empty, dropping frame\n");
@@ -1283,6 +1286,8 @@ static void tw5864_handle_frame(struct tw5864_h264_frame *frame)
 	vb2_set_plane_payload(&vb->vb.vb2_buf, 0, dst_size - dst_space);
 
 	vb->vb.vb2_buf.timestamp = frame->timestamp;
+	v4l2_buf->field = V4L2_FIELD_NONE;
+	v4l2_buf->sequence = input->frame_seqno - 1;
 
 	/* Check for motion flags */
 	if (input->h264_frame_seqno_in_gop /* P-frame */ &&
@@ -1293,7 +1298,7 @@ static void tw5864_handle_frame(struct tw5864_h264_frame *frame)
 				.flags =
 					V4L2_EVENT_MD_FL_HAVE_FRAME_SEQ,
 				.frame_sequence =
-					vb->vb.sequence,
+					v4l2_buf->sequence,
 			},
 		};
 
