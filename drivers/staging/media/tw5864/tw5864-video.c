@@ -35,12 +35,15 @@ static int tw5864_queue_setup(struct vb2_queue *q,
 {
 	struct tw5864_input *dev = vb2_get_drv_priv(q);
 
-	sizes[0] = H264_VLC_BUF_SIZE;
-	alloc_ctxs[0] = dev->alloc_ctx;
-	*num_planes = 1;
+	if (q->num_buffers + *num_buffers < 12)
+		*num_buffers = 12 - q->num_buffers;
 
-	if (*num_buffers < 12)
-		*num_buffers = 12;
+	alloc_ctxs[0] = dev->alloc_ctx;
+	if (*num_planes)
+		return sizes[0] < H264_VLC_BUF_SIZE ? -EINVAL : 0;
+
+	sizes[0] = H264_VLC_BUF_SIZE;
+	*num_planes = 1;
 
 	return 0;
 }
