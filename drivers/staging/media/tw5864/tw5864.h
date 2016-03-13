@@ -145,7 +145,6 @@ struct tw5864_input {
 	enum resolution resolution;
 	unsigned int width, height;
 	unsigned int frame_seqno;
-	unsigned int field;
 	unsigned int h264_idr_pic_id;
 	unsigned int h264_frame_seqno_in_gop;
 	int enabled;
