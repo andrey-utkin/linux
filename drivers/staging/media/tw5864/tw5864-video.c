@@ -247,8 +247,8 @@ void tw5864_request_encoded_frame(struct tw5864_input *input)
 	tw_writel(TW5864_DSP_I4x4_WEIGHT, input->reg_dsp_i4x4_weight);
 	/* 16x16 */
 	tw_mask_shift_writel(TW5864_DSP_INTRA_MODE, TW5864_DSP_INTRA_MODE_MASK,
-			TW5864_DSP_INTRA_MODE_SHIFT,
-			TW5864_DSP_INTRA_MODE_16x16);
+			     TW5864_DSP_INTRA_MODE_SHIFT,
+			     TW5864_DSP_INTRA_MODE_16x16);
 
 	if (input->frame_seqno % input->gop == 0) {
 		/* Produce I-frame */
@@ -597,7 +597,7 @@ static void tw5864_frame_interval_set(struct tw5864_input *input)
 }
 
 static int tw5864_frameinterval_get(struct tw5864_input *input,
-		struct v4l2_fract *frameinterval)
+				    struct v4l2_fract *frameinterval)
 {
 	int ret;
 	enum tw5864_vid_std std;
@@ -617,7 +617,8 @@ static int tw5864_frameinterval_get(struct tw5864_input *input,
 		frameinterval->denominator = 30;
 		break;
 	default:
-		WARN(1, "tw5864_frameinterval_get requested for unknown std %d\n", std);
+		WARN(1, "tw5864_frameinterval_get requested for unknown std %d\n",
+		     std);
 		return 1;
 	}
 

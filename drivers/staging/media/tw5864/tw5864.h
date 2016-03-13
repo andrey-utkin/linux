@@ -143,9 +143,9 @@ struct tw5864_input {
 	struct list_head active;
 	const struct tw5864_format *fmt;
 	enum resolution resolution;
-	unsigned width, height;
-	unsigned frame_seqno;
-	unsigned field;
+	unsigned int width, height;
+	unsigned int frame_seqno;
+	unsigned int field;
 	unsigned int h264_idr_pic_id;
 	unsigned int h264_frame_seqno_in_gop;
 	int enabled;
