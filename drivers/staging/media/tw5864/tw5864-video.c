@@ -701,6 +701,51 @@ static const struct v4l2_file_operations video_fops = {
 	.unlocked_ioctl = video_ioctl2,
 };
 
+#ifdef CONFIG_VIDEO_ADV_DEBUG
+
+#define INDIR_SPACE_MAP_SHIFT 0x100000
+
+static int tw5864_g_reg(struct file *file, void *fh,
+			struct v4l2_dbg_register *reg)
+{
+	struct tw5864_input *input = fh2id(fh)->itv;
+	struct tw5864_dev *dev = input->root;
+
+	if (reg->reg < INDIR_SPACE_MAP_SHIFT) {
+		if (reg->reg > 0x87FFF)
+			return -EINVAL;
+		reg->size = 4;
+		reg->val = tw_readl(reg->reg);
+	} else {
+		__u64 indir_addr = reg->reg - INDIR_SPACE_MAP_SHIFT;
+		if (indir_addr > 0xEFE)
+			return -EINVAL;
+		reg->size = 1;
+		reg->val = tw_indir_readb(dev, reg->reg);
+	}
+	return 0;
+}
+
+static int tw5864_s_reg(struct file *file, void *fh,
+			const struct v4l2_dbg_register *reg)
+{
+	struct tw5864_input *input = fh2id(fh)->itv;
+	struct tw5864_dev *dev = input->root;
+
+	if (reg->reg < INDIR_SPACE_MAP_SHIFT) {
+		if (reg->reg > 0x87FFF)
+			return -EINVAL;
+		tw_writel(reg->reg, reg->val);
+	} else {
+		__u64 indir_addr = reg->reg - INDIR_SPACE_MAP_SHIFT;
+		if (indir_addr > 0xEFE)
+			return -EINVAL;
+		tw_indir_writeb(dev, reg->reg, reg->val);
+	}
+	return 0;
+}
+#endif
+
 static const struct v4l2_ioctl_ops video_ioctl_ops = {
 	.vidioc_querycap = tw5864_querycap,
 	.vidioc_enum_fmt_vid_cap = tw5864_enum_fmt_vid_cap,
@@ -726,6 +771,10 @@ static const struct v4l2_ioctl_ops video_ioctl_ops = {
 	.vidioc_enum_frameintervals = tw5864_enum_frameintervals,
 	.vidioc_s_parm = tw5864_s_parm,
 	.vidioc_g_parm = tw5864_g_parm,
+#ifdef CONFIG_VIDEO_ADV_DEBUG
+	.vidioc_g_register = tw5864_g_reg,
+	.vidioc_s_register = tw5864_s_reg,
+#endif
 };
 
 static struct video_device tw5864_video_template = {
