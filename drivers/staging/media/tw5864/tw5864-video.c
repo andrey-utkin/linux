@@ -708,7 +708,7 @@ static const struct v4l2_file_operations video_fops = {
 static int tw5864_g_reg(struct file *file, void *fh,
 			struct v4l2_dbg_register *reg)
 {
-	struct tw5864_input *input = fh2id(fh)->itv;
+	struct tw5864_input *input = video_drvdata(file);
 	struct tw5864_dev *dev = input->root;
 
 	if (reg->reg < INDIR_SPACE_MAP_SHIFT) {
@@ -729,7 +729,7 @@ static int tw5864_g_reg(struct file *file, void *fh,
 static int tw5864_s_reg(struct file *file, void *fh,
 			const struct v4l2_dbg_register *reg)
 {
-	struct tw5864_input *input = fh2id(fh)->itv;
+	struct tw5864_input *input = video_drvdata(file);
 	struct tw5864_dev *dev = input->root;
 
 	if (reg->reg < INDIR_SPACE_MAP_SHIFT) {
