@@ -26,7 +26,6 @@
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/pm.h>
-#include <linux/debugfs.h>
 #include <linux/pci_ids.h>
 #include <asm/dma.h>
 #include <media/v4l2-dev.h>
@@ -248,95 +247,6 @@ next:
 	}
 }
 
-static size_t regs_dump(struct tw5864_dev *dev, char *buf, size_t size)
-{
-	size_t count = 0;
-	u32 reg_addr;
-	u32 value;
-	int i;
-	struct range {
-		int start;
-		int end;
-	} ranges[] = {
-		{ 0x0000, 0x2FFC },
-		{ 0x4000, 0x4FFC },
-		{ 0x8000, 0x180DC },
-		{ 0x18100, 0x1817C },
-		{ 0x80000, 0x87FFF },
-	};
-
-	/*
-	 * Dumping direct registers space,
-	 * except some spots which trigger hanging
-	 */
-	for (i = 0; i < ARRAY_SIZE(ranges); i++)
-		for (reg_addr = ranges[i].start;
-		     (count < size) && (reg_addr <= ranges[i].end);
-		     reg_addr += 4) {
-			value = tw_readl(reg_addr);
-			count += scnprintf(buf + count, size - count,
-					   "[0x%05x] = 0x%08x\n",
-					   reg_addr, value);
-		}
-
-	/* Dumping indirect register space */
-	for (reg_addr = 0x0; (count < size) && (reg_addr <= 0xEFE);
-	     reg_addr += 1) {
-		value = tw_indir_readb(dev, reg_addr);
-		count += scnprintf(buf + count, size - count,
-				   "indir[0x%03x] = 0x%02x\n", reg_addr, value);
-	}
-
-	return count;
-}
-
-#define DEBUGFS_BUF_SIZE (1024 * 1024)
-
-struct debugfs_buffer {
-	size_t count;
-	char data[DEBUGFS_BUF_SIZE];
-};
-
-static int debugfs_regs_dump_open(struct inode *inode, struct file *file)
-{
-	struct tw5864_dev *dev = inode->i_private;
-	struct debugfs_buffer *buf;
-
-	buf = kmalloc(sizeof(*buf), GFP_KERNEL);
-	if (!buf)
-		return -ENOMEM;
-
-	buf->count = regs_dump(dev, buf->data, sizeof(buf->data));
-
-	file->private_data = buf;
-	return 0;
-}
-
-static ssize_t debugfs_regs_dump_read(struct file *file, char __user *user_buf,
-				      size_t nbytes, loff_t *ppos)
-{
-	struct debugfs_buffer *buf = file->private_data;
-
-	return simple_read_from_buffer(user_buf, nbytes, ppos, buf->data,
-				       buf->count);
-}
-
-static int debugfs_regs_dump_release(struct inode *inode, struct file *file)
-{
-	kfree(file->private_data);
-	file->private_data = NULL;
-
-	return 0;
-}
-
-static const struct file_operations debugfs_regs_dump_fops = {
-	.owner = THIS_MODULE,
-	.open = debugfs_regs_dump_open,
-	.llseek = no_llseek,
-	.read = debugfs_regs_dump_read,
-	.release = debugfs_regs_dump_release,
-};
-
 static int tw5864_initdev(struct pci_dev *pci_dev,
 			  const struct pci_device_id *pci_id)
 {
@@ -386,7 +296,6 @@ static int tw5864_initdev(struct pci_dev *pci_dev,
 
 	spin_lock_init(&dev->slock);
 
-	dev->debugfs_dir = debugfs_create_dir(dev->name, NULL);
 	err = tw5864_video_init(dev, video_nr);
 	if (err)
 		goto video_init_fail;
@@ -398,9 +307,6 @@ static int tw5864_initdev(struct pci_dev *pci_dev,
 		dev_err(&dev->pci->dev, "can't get IRQ %d\n", pci_dev->irq);
 		goto irq_req_fail;
 	}
-
-	debugfs_create_file("regs_dump", S_IRUGO, dev->debugfs_dir, dev,
-			    &debugfs_regs_dump_fops);
 
 	return 0;
 
@@ -428,8 +334,6 @@ static void tw5864_finidev(struct pci_dev *pci_dev)
 
 	/* shutdown subsystems */
 	tw5864_interrupts_disable(dev);
-
-	debugfs_remove_recursive(dev->debugfs_dir);
 
 	/* unregister */
 	tw5864_video_fini(dev);
