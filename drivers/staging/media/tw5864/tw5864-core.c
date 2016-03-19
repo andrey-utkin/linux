@@ -27,6 +27,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/pm.h>
 #include <linux/pci_ids.h>
+#include <linux/jiffies.h>
 #include <asm/dma.h>
 #include <media/v4l2-dev.h>
 
@@ -200,6 +201,11 @@ static void tw5864_h264_isr(struct tw5864_dev *dev)
 	tw_writel(TW5864_MV_STREAM_BASE_ADDR, cur_frame->mv.dma_addr);
 }
 
+static void tw5864_input_deadline_update(struct tw5864_input *input)
+{
+	input->new_frame_deadline = jiffies + msecs_to_jiffies(1000);
+}
+
 static void tw5864_timer_isr(struct tw5864_dev *dev)
 {
 	unsigned long flags;
@@ -230,9 +236,18 @@ static void tw5864_timer_isr(struct tw5864_dev *dev)
 						 2 * input->input_number);
 
 		/* Check if new raw frame is available */
-		if (input->buf_id == raw_buf_id)
+		if (input->buf_id == raw_buf_id) {
+			if (time_is_after_jiffies(input->new_frame_deadline)) {
+				input->buf_id++;
+				tw_mask_shift_writel(TW5864_ENC_BUF_PTR_REC1,
+						0x3, 2 * input->input_number,
+						input->buf_id);
+				tw5864_input_deadline_update(input);
+			}
 			goto next;
+		}
 
+		input->new_frame_timeout = jiffies + msecs_to_jiffies(1000);
 		input->buf_id = raw_buf_id;
 		spin_unlock_irqrestore(&input->slock, flags);
 
@@ -240,6 +255,7 @@ static void tw5864_timer_isr(struct tw5864_dev *dev)
 		dev->encoder_busy = 1;
 		spin_unlock_irqrestore(&dev->slock, flags);
 		tw5864_request_encoded_frame(input);
+		tw5864_input_deadline_update(input);
 		break;
 next:
 		spin_unlock_irqrestore(&input->slock, flags);

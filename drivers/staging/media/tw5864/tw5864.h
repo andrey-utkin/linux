@@ -178,6 +178,7 @@ struct tw5864_input {
 	 * For 1 FPS, set to e.g. 32.
 	 */
 	int frame_interval;
+	unsigned long new_frame_deadline;
 };
 
 struct tw5864_h264_frame {
