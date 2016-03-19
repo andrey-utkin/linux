@@ -906,6 +906,18 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 	 * continuously together with 0x0038.
 	 */
 	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x00ff);
+	/* Start the channels one by one to improve scheduling */
+	mdelay(100);
+	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x0000);
+	mdelay(5);
+	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x0001);
+	mdelay(5);
+	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x0005);
+	mdelay(5);
+	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x0015);
+	mdelay(5);
+	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x0055);
+
 	tw_writel(TW5864_PCI_INTTM_SCALE, 0);
 
 	tw_writel(TW5864_INTERLACING, TW5864_DI_EN);
