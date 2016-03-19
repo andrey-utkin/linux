@@ -906,7 +906,7 @@ int tw5864_video_init(struct tw5864_dev *dev, int *video_nr)
 	 * continuously together with 0x0038.
 	 */
 	tw_writel(TW5864_ENC_BUF_PTR_REC1, 0x00ff);
-	tw_writel(TW5864_PCI_INTTM_SCALE, 3);
+	tw_writel(TW5864_PCI_INTTM_SCALE, 0);
 
 	tw_writel(TW5864_INTERLACING, TW5864_DI_EN);
 	tw_writel(TW5864_MASTER_ENB_REG, TW5864_PCI_VLC_INTR_ENB);
