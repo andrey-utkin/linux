@@ -33,7 +33,7 @@ static int tw5864_h264_gen_sps_rbsp(u8 *buf, size_t size, int width, int height)
 	s = &bs;
 	bs_init(s, buf, size);
 	bs_write(s, 8, 0x42 /* profile == 66, baseline */);
-	bs_write(s, 8, 0 /* constraints */);
+	bs_write(s, 8, 1 /* constraints */);
 	bs_write(s, 8, 0x1E /* level */);
 	bs_write_ue(s, 0 /* SPS id */);
 	bs_write_ue(s, i_log2_max_frame_num - 4);
