@@ -412,5 +412,6 @@ static struct i2c_driver is31fl319x_driver = {
 module_i2c_driver(is31fl319x_driver);
 
 MODULE_AUTHOR("H. Nikolaus Schaller <hns@goldelico.com>");
+MODULE_AUTHOR("Andrey Utkin <andrey_utkin@fastmail.com>");
 MODULE_DESCRIPTION("IS31FL319X LED driver");
 MODULE_LICENSE("GPL v2");
