@@ -23,26 +23,26 @@
 #include <linux/slab.h>
 
 /* register numbers */
-#define IS31FL319X_SHUTDOWN	0x00
-#define IS31FL319X_CTRL1	0x01
-#define IS31FL319X_CTRL2	0x02
-#define IS31FL319X_CONFIG1	0x03
-#define IS31FL319X_CONFIG2	0x04
-#define IS31FL319X_RAMP_MODE	0x05
-#define IS31FL319X_BREATH_MASK	0x06
+#define IS31FL319X_SHUTDOWN     0x00
+#define IS31FL319X_CTRL1        0x01
+#define IS31FL319X_CTRL2        0x02
+#define IS31FL319X_CONFIG1      0x03
+#define IS31FL319X_CONFIG2      0x04
+#define IS31FL319X_RAMP_MODE    0x05
+#define IS31FL319X_BREATH_MASK  0x06
 #define IS31FL319X_PWM(channel) (0x07 + channel)
-#define IS31FL319X_DATA_UPDATE	0x10
+#define IS31FL319X_DATA_UPDATE  0x10
 #define IS31FL319X_T0(channel)  (0x11 + channel)
-#define IS31FL319X_T123_1	0x1a
-#define IS31FL319X_T123_2	0x1b
-#define IS31FL319X_T123_3	0x1c
+#define IS31FL319X_T123_1       0x1a
+#define IS31FL319X_T123_2       0x1b
+#define IS31FL319X_T123_3       0x1c
 #define IS31FL319X_T4(channel)  (0x1d + channel)
-#define IS31FL319X_TIME_UPDATE	0x26
-#define IS31FL319X_RESET	0xff
+#define IS31FL319X_TIME_UPDATE  0x26
+#define IS31FL319X_RESET        0xff
 
-#define IS31FL319X_REG_CNT	(IS31FL319X_RESET + 1)
+#define IS31FL319X_REG_CNT      (IS31FL319X_RESET + 1)
 
-#define NUM_LEDS 9	/* max for 3199 chip */
+#define NUM_LEDS 9 /* max for 3199 chip */
 
 #define LED_MAX_MICROAMP_UPPER_LIMIT ((u32) 40000)
 #define LED_MAX_MICROAMP_LOWER_LIMIT ((u32) 5000)
@@ -57,14 +57,14 @@
  * which is known to hang.
  */
 struct is31fl319x_chip {
-	struct i2c_client	*client;
-	struct regmap		*regmap;
+	struct i2c_client       *client;
+	struct regmap           *regmap;
 	struct mutex            lock;
 	u32                     audio_gain_db;
 
 	struct is31fl319x_led {
-		struct is31fl319x_chip	*chip;
-		struct led_classdev	cdev;
+		struct is31fl319x_chip  *chip;
+		struct led_classdev     cdev;
 		u32                     max_microamp;
 		bool                    configured;
 	} leds[NUM_LEDS];
@@ -117,11 +117,11 @@ static int is31fl319x_brightness_set(struct led_classdev *cdev,
 		on = ret >= 0 && pwm_value > LED_OFF;
 
 		if (i < 3)
-			ctrl1 |= on << i;	/* 0..2 => bit 0..2 */
+			ctrl1 |= on << i;     /* 0..2 => bit 0..2 */
 		else if (i < 6)
-			ctrl1 |= on << (i+1);	/* 3..5 => bit 4..6 */
+			ctrl1 |= on << (i+1); /* 3..5 => bit 4..6 */
 		else
-			ctrl2 |= on << (i-6);	/* 6..8 => bit 0..2 */
+			ctrl2 |= on << (i-6); /* 6..8 => bit 0..2 */
 	}
 
 	if (ctrl1 > 0 || ctrl2 > 0) {
@@ -158,7 +158,7 @@ static int is31fl319x_parse_child_dt(const struct device *dev,
 	cdev->default_trigger = NULL;
 	ret = of_property_read_string(child, "linux,default-trigger",
 		&cdev->default_trigger);
-	if (ret < 0 && ret != -EINVAL)	/* is optional */
+	if (ret < 0 && ret != -EINVAL) /* is optional */
 		return ret;
 
 	led->max_microamp = LED_MAX_MICROAMP_DEFAULT;
@@ -264,7 +264,7 @@ static bool is31fl319x_volatile_reg(struct device *dev, unsigned int reg)
 	case IS31FL319X_DATA_UPDATE:
 	case IS31FL319X_TIME_UPDATE:
 	case IS31FL319X_RESET:
-		return true;	/* always write-through */
+		return true; /* always write-through */
 	default:
 		return false;
 	}
@@ -352,7 +352,7 @@ static int is31fl319x_probe(struct i2c_client *client,
 	if (err < 0) {
 		dev_err(&client->dev, "no response from chip write: err = %d\n",
 			err);
-		return -EIO;	/* does not answer */
+		return -EIO; /* does not answer */
 	}
 
 	regmap_write(is31->regmap, IS31FL319X_CTRL1, 0x00);
