@@ -321,9 +321,6 @@ static int is31fl319x_probe(struct i2c_client *client,
 				= leds[i].default_trigger;
 			l->led_cdev.brightness_set_blocking
 				= is31fl319x_brightness_set;
-			/* NOTE: is31fl319x_brightness_set will be called
-			 * immediately after register() before we return
-			 */
 			err = devm_led_classdev_register(&client->dev,
 						    &l->led_cdev);
 			if (err < 0)
