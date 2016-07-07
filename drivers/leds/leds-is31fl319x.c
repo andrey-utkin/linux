@@ -100,9 +100,9 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 	int ret;
 
 	int i;
-	u8 ctrl1=0, ctrl2=0;
+	u8 ctrl1 = 0, ctrl2 = 0;
 
-	dev_dbg(&is31->client->dev, "%s %ld: %d\n", __func__, (led - is31->leds),
+	dev_dbg(&is31->client->dev, "%s %ld: %d\n", __func__, led - is31->leds,
 		brightness);
 
 	mutex_lock(&is31->lock);
