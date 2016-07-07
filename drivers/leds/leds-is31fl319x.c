@@ -302,6 +302,22 @@ static struct regmap_config regmap_config = {
 	.volatile_reg = is31fl319x_volatile_reg,
 };
 
+static int is31fl319x_microamp_to_cs(u32 microamp)
+{
+	switch (microamp) {
+	default:
+		WARN(1, "Invalid microamp setting");
+	case 20000: return 0;
+	case 15000: return 1;
+	case 10000: return 2;
+	case 5000:  return 3;
+	case 40000: return 4;
+	case 35000: return 5;
+	case 30000: return 6;
+	case 25000: return 7;
+	}
+}
+
 static int is31fl319x_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
@@ -366,8 +382,7 @@ static int is31fl319x_probe(struct i2c_client *client,
 			aggregated_led_microamp = is31->leds[i].max_microamp;
 
 	/* CS */
-	/* TODO FIXME calculation seems wrong */
-	config2 |= (((64000 - aggregated_led_microamp) / 5000) & 0x7) << 4;
+	config2 |= is31fl319x_microamp_to_cs(aggregated_led_microamp) << 4;
 	config2 |= is31->audio_gain_db / 3; /* AGS */
 	regmap_write(is31->regmap, IS31FL319X_CONFIG2, config2);
 
