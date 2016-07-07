@@ -325,7 +325,6 @@ static int is31fl319x_probe(struct i2c_client *client,
 	struct i2c_adapter *adapter;
 	int err;
 	int i = 0;
-	u8 config2 = 0;
 	u32 aggregated_led_microamp = LED_MAX_MICROAMP_UPPER_LIMIT;
 
 	adapter = to_i2c_adapter(client->dev.parent);
@@ -381,10 +380,9 @@ static int is31fl319x_probe(struct i2c_client *client,
 		    is31->leds[i].max_microamp < aggregated_led_microamp)
 			aggregated_led_microamp = is31->leds[i].max_microamp;
 
-	/* CS */
-	config2 |= is31fl319x_microamp_to_cs(aggregated_led_microamp) << 4;
-	config2 |= is31->audio_gain_db / 3; /* AGS */
-	regmap_write(is31->regmap, IS31FL319X_CONFIG2, config2);
+	regmap_write(is31->regmap, IS31FL319X_CONFIG2,
+		     is31fl319x_microamp_to_cs(aggregated_led_microamp) << 4 |
+		     is31->audio_gain_db / 3);
 
 	for (i = 0; i < NUM_LEDS; i++) {
 		struct is31fl319x_led *l = &is31->leds[i];
