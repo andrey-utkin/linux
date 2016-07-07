@@ -32,27 +32,11 @@
 #define IS31FL319X_BREATH_MASK	0x06
 #define IS31FL319X_PWM(channel) (0x07 + channel)
 #define IS31FL319X_DATA_UPDATE	0x10
-#define IS31FL319X_T0_1		0x11
-#define IS31FL319X_T0_2		0x12
-#define IS31FL319X_T0_3		0x13
-#define IS31FL319X_T0_4		0x14
-#define IS31FL319X_T0_5		0x15
-#define IS31FL319X_T0_6		0x16
-#define IS31FL319X_T0_7		0x17
-#define IS31FL319X_T0_8		0x18
-#define IS31FL319X_T0_9		0x19
+#define IS31FL319X_T0(channel)  (0x11 + channel)
 #define IS31FL319X_T123_1	0x1a
 #define IS31FL319X_T123_2	0x1b
 #define IS31FL319X_T123_3	0x1c
-#define IS31FL319X_T4_1		0x1d
-#define IS31FL319X_T4_2		0x1e
-#define IS31FL319X_T4_3		0x1f
-#define IS31FL319X_T4_4		0x20
-#define IS31FL319X_T4_5		0x21
-#define IS31FL319X_T4_6		0x22
-#define IS31FL319X_T4_7		0x23
-#define IS31FL319X_T4_8		0x24
-#define IS31FL319X_T4_9		0x25
+#define IS31FL319X_T4(channel)  (0x1d + channel)
 #define IS31FL319X_TIME_UPDATE	0x26
 #define IS31FL319X_RESET	0xff
 
