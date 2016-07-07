@@ -83,7 +83,7 @@ struct is31fl319x_chip {
 
 	struct is31fl319x_led {
 		struct is31fl319x_chip	*chip;
-		struct led_classdev	led_cdev;
+		struct led_classdev	cdev;
 		u32                     max_microamp;
 		bool                    configured;
 	} leds[NUM_LEDS];
@@ -100,12 +100,11 @@ static const struct i2c_device_id is31fl319x_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, is31fl319x_id);
 
-static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
+static int is31fl319x_brightness_set(struct led_classdev *cdev,
 				   enum led_brightness brightness)
 {
-	struct is31fl319x_led *led = container_of(led_cdev,
-						  struct is31fl319x_led,
-						  led_cdev);
+	struct is31fl319x_led *led = container_of(cdev, struct is31fl319x_led,
+						  cdev);
 	struct is31fl319x_chip *is31 = led->chip;
 	int chan = led - is31->leds;
 	int ret;
@@ -127,7 +126,7 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 		bool on;
 
 		/*
-		 * since neither led_cdev nor the chip can provide
+		 * since neither cdev nor the chip can provide
 		 * the current setting, we read from the regmap cache
 		 */
 
@@ -170,7 +169,7 @@ static int is31fl319x_parse_child_dt(const struct device *dev,
 				     const struct device_node *child,
 				     struct is31fl319x_led *led)
 {
-	struct led_classdev *cdev = &led->led_cdev;
+	struct led_classdev *cdev = &led->cdev;
 	int ret;
 
 	cdev->name = NULL;
@@ -385,15 +384,15 @@ static int is31fl319x_probe(struct i2c_client *client,
 		     is31->audio_gain_db / 3);
 
 	for (i = 0; i < NUM_LEDS; i++) {
-		struct is31fl319x_led *l = &is31->leds[i];
+		struct is31fl319x_led *led = &is31->leds[i];
 
-		if (!l->configured)
+		if (!led->configured)
 			continue;
 
-		l->chip = is31;
-		l->led_cdev.brightness_set_blocking = is31fl319x_brightness_set;
+		led->chip = is31;
+		led->cdev.brightness_set_blocking = is31fl319x_brightness_set;
 
-		err = devm_led_classdev_register(&client->dev, &l->led_cdev);
+		err = devm_led_classdev_register(&client->dev, &led->cdev);
 		if (err < 0)
 			return err;
 	}
