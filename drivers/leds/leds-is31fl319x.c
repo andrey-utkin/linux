@@ -99,9 +99,9 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 	int ret;
 
 	int i;
-	u8 ctrl1, ctrl2;
+	u8 ctrl1=0, ctrl2=0;
 
-	dev_dbg(&is31->client->dev, "%s %d: %d\n", __func__, (led - is31->leds),
+	dev_dbg(&is31->client->dev, "%s %ld: %d\n", __func__, (led - is31->leds),
 		brightness);
 
 	/* update PWM register */
@@ -109,9 +109,6 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 			   brightness);
 	if (ret < 0)
 		return ret;
-
-	ctrl1 = 0;
-	ctrl2 = 0;
 
 	/* read current brightness of all PWM channels */
 	for (i = 0; i < NUM_LEDS; i++) {
@@ -297,7 +294,7 @@ static int is31fl319x_probe(struct i2c_client *client,
 		u32 val;
 		u8 config2 = 0;
 
-		if (of_property_read_u32(client->dev.of_node,
+		if (!of_property_read_u32(client->dev.of_node,
 					 "led-max-microamp", &val)) {
 			if (val > 40000)
 				val = 40000;
@@ -305,7 +302,7 @@ static int is31fl319x_probe(struct i2c_client *client,
 				val = 5000;
 			config2 |= (((64000 - val) / 5000) & 0x7) << 4; /* CS */
 		}
-		if (of_property_read_u32(client->dev.of_node, "audio-gain-db",
+		if (!of_property_read_u32(client->dev.of_node, "audio-gain-db",
 					 &val)) {
 			if (val > 21)
 				val = 21;
@@ -334,7 +331,6 @@ static int is31fl319x_probe(struct i2c_client *client,
 		}
 	}
 
-	dev_dbg(&client->dev, "probed\n");
 	return 0;
 }
 
