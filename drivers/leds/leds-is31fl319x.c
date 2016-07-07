@@ -71,6 +71,7 @@
 struct is31fl319x_chip {
 	struct i2c_client	*client;
 	struct regmap		*regmap;
+	struct mutex            lock;
 
 	struct is31fl319x_led {
 		struct is31fl319x_chip	*chip;
@@ -104,11 +105,13 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 	dev_dbg(&is31->client->dev, "%s %ld: %d\n", __func__, (led - is31->leds),
 		brightness);
 
+	mutex_lock(&is31->lock);
+
 	/* update PWM register */
 	ret = regmap_write(is31->regmap, IS31FL319X_PWM1 + (led - is31->leds),
 			   brightness);
 	if (ret < 0)
-		return ret;
+		goto out;
 
 	/* read current brightness of all PWM channels */
 	for (i = 0; i < NUM_LEDS; i++) {
@@ -148,6 +151,9 @@ static int is31fl319x_brightness_set(struct led_classdev *led_cdev,
 		/* shut down (no need to clear CTRL1/2) */
 		ret = regmap_write(is31->regmap, IS31FL319X_SHUTDOWN, 0x00);
 	}
+
+out:
+	mutex_unlock(&is31->lock);
 
 	return ret;
 }
@@ -266,6 +272,8 @@ static int is31fl319x_probe(struct i2c_client *client,
 	is31 = devm_kzalloc(&client->dev, sizeof(*is31), GFP_KERNEL);
 	if (!is31)
 		return -ENOMEM;
+
+	mutex_init(&is31->lock);
 
 	is31->client = client;
 	is31->regmap = devm_regmap_init_i2c(client, &regmap_config);
