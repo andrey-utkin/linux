@@ -75,6 +75,11 @@
 
 #define AUDIO_GAIN_DB_MAX ((u32) 21)
 
+/*
+ * regmap is used as a cache of chip's register space,
+ * to avoid reading back brightness values from chip,
+ * which is known to hang.
+ */
 struct is31fl319x_chip {
 	struct i2c_client	*client;
 	struct regmap		*regmap;
@@ -290,6 +295,18 @@ static bool is31fl319x_volatile_reg(struct device *dev, unsigned int reg)
 	}
 }
 
+static const struct reg_default is31fl319x_reg_defaults[] = {
+	{ IS31FL319X_PWM1, 0x00},
+	{ IS31FL319X_PWM2, 0x00},
+	{ IS31FL319X_PWM3, 0x00},
+	{ IS31FL319X_PWM4, 0x00},
+	{ IS31FL319X_PWM5, 0x00},
+	{ IS31FL319X_PWM6, 0x00},
+	{ IS31FL319X_PWM7, 0x00},
+	{ IS31FL319X_PWM8, 0x00},
+	{ IS31FL319X_PWM9, 0x00},
+};
+
 static struct regmap_config regmap_config = {
 	.reg_bits = 8,
 	.val_bits = 8,
@@ -297,6 +314,8 @@ static struct regmap_config regmap_config = {
 	.cache_type = REGCACHE_FLAT,
 	.readable_reg = is31fl319x_readable_reg,
 	.volatile_reg = is31fl319x_volatile_reg,
+	.reg_defaults = is31fl319x_reg_defaults,
+	.num_reg_defaults = ARRAY_SIZE(is31fl319x_reg_defaults),
 };
 
 static int is31fl319x_microamp_to_cs(u32 microamp)
@@ -361,11 +380,8 @@ static int is31fl319x_probe(struct i2c_client *client,
 		return -EIO;	/* does not answer */
 	}
 
-	/* initialize chip and regmap so that we never try to read from i2c */
 	regmap_write(is31->regmap, IS31FL319X_CTRL1, 0x00);
 	regmap_write(is31->regmap, IS31FL319X_CTRL2, 0x00);
-	for (i = 0; i < NUM_LEDS; i++)
-		regmap_write(is31->regmap, IS31FL319X_PWM1 + i, 0x00);
 
 	/*
 	 * Kernel conventions require per-LED led-max-microamp property.
