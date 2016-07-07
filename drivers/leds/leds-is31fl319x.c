@@ -172,10 +172,8 @@ static int is31fl319x_parse_child_dt(const struct device *dev,
 	struct led_classdev *cdev = &led->cdev;
 	int ret;
 
-	cdev->name = NULL;
-	ret = of_property_read_string(child, "label", &cdev->name);
-	if (ret < 0 && ret != -EINVAL)	/* is optional */
-		return ret;
+	if (of_property_read_string(child, "label", &cdev->name))
+		cdev->name = child->name;
 
 	cdev->default_trigger = NULL;
 	ret = of_property_read_string(child, "linux,default-trigger",
