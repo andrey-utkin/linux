@@ -30,15 +30,7 @@
 #define IS31FL319X_CONFIG2	0x04
 #define IS31FL319X_RAMP_MODE	0x05
 #define IS31FL319X_BREATH_MASK	0x06
-#define IS31FL319X_PWM1		0x07
-#define IS31FL319X_PWM2		0x08
-#define IS31FL319X_PWM3		0x09
-#define IS31FL319X_PWM4		0x0a
-#define IS31FL319X_PWM5		0x0b
-#define IS31FL319X_PWM6		0x0c
-#define IS31FL319X_PWM7		0x0d
-#define IS31FL319X_PWM8		0x0e
-#define IS31FL319X_PWM9		0x0f
+#define IS31FL319X_PWM(channel) (0x07 + channel)
 #define IS31FL319X_DATA_UPDATE	0x10
 #define IS31FL319X_T0_1		0x11
 #define IS31FL319X_T0_2		0x12
@@ -121,7 +113,7 @@ static int is31fl319x_brightness_set(struct led_classdev *cdev,
 	mutex_lock(&is31->lock);
 
 	/* update PWM register */
-	ret = regmap_write(is31->regmap, IS31FL319X_PWM1 + chan, brightness);
+	ret = regmap_write(is31->regmap, IS31FL319X_PWM(chan), brightness);
 	if (ret < 0)
 		goto out;
 
@@ -135,8 +127,7 @@ static int is31fl319x_brightness_set(struct led_classdev *cdev,
 		 * the current setting, we read from the regmap cache
 		 */
 
-		ret = regmap_read(is31->regmap, IS31FL319X_PWM1 + i,
-				  &pwm_value);
+		ret = regmap_read(is31->regmap, IS31FL319X_PWM(i), &pwm_value);
 		dev_dbg(&is31->client->dev, "%s read %d: ret=%d: %d\n",
 			__func__, i, ret, pwm_value);
 		on = ret >= 0 && pwm_value > LED_OFF;
@@ -296,15 +287,15 @@ static bool is31fl319x_volatile_reg(struct device *dev, unsigned int reg)
 }
 
 static const struct reg_default is31fl319x_reg_defaults[] = {
-	{ IS31FL319X_PWM1, 0x00},
-	{ IS31FL319X_PWM2, 0x00},
-	{ IS31FL319X_PWM3, 0x00},
-	{ IS31FL319X_PWM4, 0x00},
-	{ IS31FL319X_PWM5, 0x00},
-	{ IS31FL319X_PWM6, 0x00},
-	{ IS31FL319X_PWM7, 0x00},
-	{ IS31FL319X_PWM8, 0x00},
-	{ IS31FL319X_PWM9, 0x00},
+	{ IS31FL319X_PWM(0), 0x00},
+	{ IS31FL319X_PWM(1), 0x00},
+	{ IS31FL319X_PWM(2), 0x00},
+	{ IS31FL319X_PWM(3), 0x00},
+	{ IS31FL319X_PWM(4), 0x00},
+	{ IS31FL319X_PWM(5), 0x00},
+	{ IS31FL319X_PWM(6), 0x00},
+	{ IS31FL319X_PWM(7), 0x00},
+	{ IS31FL319X_PWM(8), 0x00},
 };
 
 static struct regmap_config regmap_config = {
