@@ -9,7 +9,7 @@
  * the GNU General Public License.  See the file COPYING in the main
  * directory of this archive for more details.
  *
- * LED driver for the IS31FL3191/3/6/99 to drive 1, 3, 6 or 9 light
+ * LED driver for the IS31FL319{0,1,3,6,9} to drive 1, 3, 6 or 9 light
  * effect LEDs.
  *
  */
