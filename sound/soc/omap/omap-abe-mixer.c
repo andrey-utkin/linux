@@ -25,7 +25,7 @@
  */
 
 #include <linux/export.h>
-#include <linux/opp.h>
+#include <linux/pm_opp.h>
 
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>

@@ -24,7 +24,7 @@
  */
 
 #include <linux/pm_runtime.h>
-#include <linux/opp.h>
+#include <linux/pm_opp.h>
 #include <linux/slab.h>
 #include <linux/export.h>
 #include <linux/delay.h>

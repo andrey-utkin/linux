@@ -30,7 +30,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/firmware.h>
 #include <linux/debugfs.h>
-#include <linux/opp.h>
+#include <linux/pm_opp.h>
 #include <linux/dma-mapping.h>
 #include <linux/of_device.h>
 
